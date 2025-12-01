@@ -1,401 +1,502 @@
-import React, { useState, useMemo } from 'react';
-import { 
-  Search, 
-  Filter, 
-  Calendar, 
-  Mail, 
-  Phone, 
-  MapPin, 
-  Building2, 
-  AlertCircle,
-  TrendingUp,
-  Thermometer,
-  Users,
-  ChevronRight,
-  X,
-  Briefcase
-} from 'lucide-react';
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Clientes CRM</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.2s ease-out forwards;
+        }
+        /* Custom scrollbar for table */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 font-sans text-slate-900 min-h-screen">
 
-// Dados processados a partir da entrada fornecida
-const rawData = [
-  { id: "11784", nome: "MARCOS E LIGIA", loja: "MOURAVEL VEICULOS LTDA", produto: "Lions Car Club", email: "marcosjdemoura@hotmail.com", telefone: "43996713029", inicio: "05/08/2023", vencimento: "09/10/2025", etapa: "Renovação", status: "Follow-up", temp: "Morno", endereco: "RUA SANTA CATARINA, 491 CENTRO, LONDRINA, PR", cnpj: "19473574000105", desafio: "Gestão comercial: organizar o processo de vendas" },
-  { id: "11813", nome: "JUNIOR MACARIO", loja: "Jr Veiculos LTDA", produto: "Lions Car Club", email: "8881789376", telefone: "24/10/2023", inicio: "24/10/2023", vencimento: "20/10/2025", etapa: "Renovação", status: "A renovar", temp: "Morno", endereco: "Rua Professor Julio Holanda 134 Iraja Quixadá CE", cnpj: "35665146000130", desafio: "Gestão comercial e resultados" },
-  { id: "202216343", nome: "Diogo", loja: "Diogo Automóveis Ltda", produto: "Lions Car Club", email: "diogoautomoveismuriae@gmail.com", telefone: "32988878522", inicio: "23/10/2024", vencimento: "23/10/2025", etapa: "Renovação", status: "A renovar", temp: "Frio", endereco: "Avenida Dante Bruno, 165 - Dornelas, Muriaé - MG", cnpj: "45536762000145", desafio: "Gestão comercial e equipe" },
-  { id: "25017901", nome: "Leonardo martini", loja: "martinauto comercio de veiculos ltda", produto: "Lions Car Club", email: "leonardo@martinemotors.com.br", telefone: "11940010830", inicio: "14/11/2024", vencimento: "14/11/2025", etapa: "Simulação Lions Car Club", status: "Enviar para Renovação", temp: "Morno", endereco: "Rua Arthur Germano Fher, 16, Jundiaí - SP", cnpj: "00027164000102", desafio: "Pré-vendas e qualificação" },
-  { id: "15012011779", nome: "ARMANDO", loja: "Londrina Comercio de Carros e Servicos", produto: "Lions Car Club", email: "londrinacarrosvendas@gmail.com", telefone: "43999574707", inicio: "05/08/2023", vencimento: "20/11/2025", etapa: "Renovação", status: "SE Agendada", temp: "Morno", endereco: "RUA MARANHAO, CENTRO, 691 LONDRINA PR", cnpj: "41022918047000171", desafio: "" },
-  { id: "11800", nome: "PAULO VIANNA", loja: "Reis Magos Comercio de Veiculos LTDA", produto: "Lions Car Club", email: "Adm.natal@showautomall.com.br", telefone: "84991322137", inicio: "21/10/2023", vencimento: "24/11/2025", etapa: "Renovação", status: "A renovar", temp: "Morno", endereco: "Rua Lucia Viveiros 535 Loja 25 Neopolis Natal RN", cnpj: "27390708000152", desafio: "Pré-vendas e qualificação" },
-  { id: "14707", nome: "Cláudia Mara Dessanti", loja: "Pallotti Veiculos Freitas & Dessanti", produto: "Lions Car Club", email: "pallottiveiculos@hotmail.com", telefone: "45999254645", inicio: "26/07/2024", vencimento: "10/12/2025", etapa: "Simulação Lions Car Club", status: "Enviar para Renovação", temp: "Quente", endereco: "Avenida Tito Muffato, 655, Cascavel, PR", cnpj: "19002116000198", desafio: "Gestão comercial" },
-  { id: "1530137", nome: "Thomaz Lopes", loja: "Thomaz Comércio, serviço e locação", produto: "Lions Car Club", email: "thomazlopescg@gmail.com", telefone: "83991339090", inicio: "10/12/2024", vencimento: "10/12/2025", etapa: "[CS] Lions car club", status: "Processo de cancelamento", temp: "Quente", endereco: "Rua Diógenes Chianca, 1401, João Pessoa - PB", cnpj: "33872846000170", desafio: "Gestão de pessoas" },
-  { id: "904011229", nome: "Tiago Zorzi", loja: "America Carros", produto: "Lions Car Club", email: "vendas@americacarros.com.br", telefone: "4999804179", inicio: "15/03/2024", vencimento: "11/12/2025", etapa: "Simulação Lions Car Club", status: "Comercial", temp: "Morno", endereco: "AVENIDA GETULIO VARGAS, 1171, ABELARDO LUZ - SC", cnpj: "46769308000105", desafio: "Gestão comercial" },
-  { id: "11643", nome: "Jean Lameque", loja: "JCAR", produto: "Lions Car Club", email: "jcarseminosvosadm@gmail.com", telefone: "11932122124", inicio: "15/04/2024", vencimento: "15/12/2025", etapa: "Simulação Lions Car Club", status: "Comercial", temp: "Morno", endereco: "Avenida Cupecê, 3545, São Paulo/SP", cnpj: "2786628000168", desafio: "Pré-vendas" },
-  { id: "1116589", nome: "Loren Porto", loja: "Pardim Porto Comércio de Veículos", produto: "Programa G30", email: "lorenpardim@outlook.com", telefone: "11999929950", inicio: "07/10/2024", vencimento: "07/10/2025", etapa: "Renovação", status: "Negociações Iniciadas", temp: "Frio", endereco: "Avenida Governador Adhemar de Barros, 821, Mogi das Cruzes", cnpj: "26333402000100", desafio: "Gestão comercial" },
-  { id: "252016626", nome: "Michele Porto", loja: "Auto Padrão Veículos Ltda", produto: "Programa G30", email: "micheleportoautopadrao@gmail.com", telefone: "62984521188", inicio: "10/10/2024", vencimento: "10/10/2025", etapa: "Renovação", status: "Negociações Iniciadas", temp: "Frio", endereco: "Av. República do Líbano, 137, Goiânia - GO", cnpj: "14580907000181", desafio: "Estratégias de prospecção ativa" },
-  { id: "251017159", nome: "Hugo", loja: "HR Concept car ltda", produto: "Programa G30", email: "hrconceptcar@gmail.com", telefone: "31995035229", inicio: "18/10/2024", vencimento: "18/10/2025", etapa: "Renovação", status: "SE Agendada", temp: "Quente", endereco: "Avenida Bandeirantes, 590B, Betim - MG", cnpj: "53190030000174", desafio: "Nunca trabalhou com o digital" },
-  { id: "15802", nome: "Ronaldo Garcia", loja: "Ashow veículos Ltda", produto: "Programa G30", email: "drronaldogarcia@gmail.com", telefone: "21984819015", inicio: "31/10/2024", vencimento: "31/10/2025", etapa: "[CS] Programa G30", status: "Processo de cancelamento", temp: "Quente", endereco: "Rua De Adrianópolis, 1812, Nova Iguaçu - RJ", cnpj: "47786262000197", desafio: "Estratégias de prospecção ativa" },
-  { id: "101039826", nome: "Kiko", loja: "Zero Kilometro Automoveis LTDA", produto: "Programa G30", email: "gerencia@meuzerokilometro.com.br", telefone: "31983004043", inicio: "04/11/2025", vencimento: "04/11/2025", etapa: "Simulação G30 Pro", status: "Marketing", temp: "Quente", endereco: "Avenida Barão Homem de Melo, 2951, Belo Horizonte - MG", cnpj: "25299122000151", desafio: "Negociação e fechamento" },
-  { id: "81014905", nome: "Rudinei", loja: "Zorzetto veículos Ltda", produto: "Programa G30", email: "zorzettoveiculos@gmail.com", telefone: "54996094710", inicio: "13/11/2024", vencimento: "13/11/2025", etapa: "Renovação", status: "A renovar", temp: "Quente", endereco: "Rua Procópio de Lima, 435, Pato Branco - PR", cnpj: "36429853000190", desafio: "Estratégias de prospecção ativa" },
-  { id: "3516846", nome: "Lidianne Leite", loja: "MCAR VEICULOS", produto: "Programa G30", email: "matos.lidi@hotmail.com", telefone: "91982171219", inicio: "16/10/2024", vencimento: "16/11/2025", etapa: "Simulação G30 Pro", status: "Enviar para Renovação", temp: "Quente", endereco: "Av. Sen. Lemos, 156, Belém - PA", cnpj: "24631359000125", desafio: "Gestão comercial" },
-  { id: "452218588", nome: "Elison Ribeiro", loja: "BERTO MULTIMARCAS LTDA", produto: "Programa G30", email: "elison.dsribeiro@gmail.com", telefone: "45998197550", inicio: "11/12/2024", vencimento: "11/12/2025", etapa: "Simulação G30 Pro", status: "Enviar para Renovação", temp: "Quente", endereco: "AVENIDA JULES RIMET, 1313, FOZ DO IGUAÇU, PR", cnpj: "29835334295000117", desafio: "Pré-vendas" },
-  { id: "10018518", nome: "Jose", loja: "J Augusto Veículos", produto: "Programa G30", email: "grajeveiculos2023@gmail.com", telefone: "8899717676", inicio: "13/12/2024", vencimento: "13/12/2025", etapa: "Simulação G30 Pro", status: "Enviar para Renovação", temp: "Quente", endereco: "Avenida Padre Cícero 2215, Juazeiro Do Norte CE", cnpj: "49423744000108", desafio: "Negociação e fechamento" },
-  { id: "502018295", nome: "Carlos", loja: "Fm Empreendimentos", produto: "Programa G30", email: "fmp.atendimento@hotmail.com", telefone: "31996196360", inicio: "19/12/2024", vencimento: "19/12/2025", etapa: "Renovação", status: "A renovar", temp: "Quente", endereco: "Rua Capitão Leonidio Soares, 610, Belo Horizonte - MG", cnpj: "22010260000180", desafio: "Contratação de time" },
-];
-
-const Modal = ({ isOpen, onClose, client }) => {
-  if (!isOpen || !client) return null;
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl overflow-hidden animate-fade-in">
-        <div className="bg-slate-800 p-4 flex justify-between items-center">
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
-            <Briefcase size={20} />
-            Detalhes do Cliente
-          </h2>
-          <button onClick={onClose} className="text-gray-300 hover:text-white transition-colors">
-            <X size={24} />
-          </button>
+    <!-- Header -->
+    <header class="bg-slate-900 text-white shadow-lg sticky top-0 z-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <img 
+                    src="https://raw.githubusercontent.com/danfernandes12/g30-summit-dashboard/91b8ada84154b053fb9d81ef1bf9d5910773bcac/g30ia" 
+                    alt="G30 Logo" 
+                    class="h-10 w-auto object-contain bg-white/10 rounded-md p-1"
+                />
+                <h1 class="text-xl font-bold tracking-tight">CRM Gestão de Clientes</h1>
+            </div>
+            <div class="text-sm text-slate-400 hidden md:block" id="current-date">
+                <!-- Data inserida via JS -->
+            </div>
         </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
-        <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
-          <div className="flex flex-col md:flex-row gap-4 justify-between border-b pb-4">
-            <div>
-              <h3 className="text-2xl font-bold text-slate-800">{client.loja}</h3>
-              <p className="text-gray-600 font-medium">{client.nome}</p>
-            </div>
-            <div className={`px-4 py-2 rounded-full text-sm font-bold self-start ${
-              client.produto.includes('Lions') ? 'bg-indigo-100 text-indigo-700' : 'bg-emerald-100 text-emerald-700'
-            }`}>
-              {client.produto}
-            </div>
-          </div>
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8" id="stats-container">
+            <!-- Cards inseridos via JS -->
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-4">
-              <div>
-                <label className="text-xs font-semibold text-gray-500 uppercase">Contato</label>
-                <div className="flex items-center gap-2 mt-1 text-gray-700">
-                  <Mail size={16} />
-                  <span>{client.email || 'Não informado'}</span>
+        <!-- Filters & Actions -->
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 mb-6 flex flex-col md:flex-row gap-4 justify-between items-center">
+            <div class="relative w-full md:w-96">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i data-lucide="search" class="h-5 w-5 text-gray-400"></i>
                 </div>
-                <div className="flex items-center gap-2 mt-1 text-gray-700">
-                  <Phone size={16} />
-                  <span>{client.telefone || 'Não informado'}</span>
-                </div>
-              </div>
-
-              <div>
-                <label className="text-xs font-semibold text-gray-500 uppercase">Localização</label>
-                <div className="flex items-start gap-2 mt-1 text-gray-700">
-                  <MapPin size={16} className="mt-1 flex-shrink-0" />
-                  <span>{client.endereco || 'Endereço não cadastrado'}</span>
-                </div>
-              </div>
+                <input
+                    type="text"
+                    id="search-input"
+                    class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition-all"
+                    placeholder="Buscar por cliente ou loja..."
+                />
             </div>
 
-            <div className="space-y-4">
-              <div>
-                <label className="text-xs font-semibold text-gray-500 uppercase">Dados Comerciais</label>
-                <div className="grid grid-cols-2 gap-2 mt-1">
-                  <div className="bg-gray-50 p-2 rounded">
-                    <span className="text-xs text-gray-500 block">CNPJ</span>
-                    <span className="font-mono text-sm">{client.cnpj || '---'}</span>
-                  </div>
-                  <div className="bg-gray-50 p-2 rounded">
-                    <span className="text-xs text-gray-500 block">ID Interno</span>
-                    <span className="font-mono text-sm">{client.id}</span>
-                  </div>
+            <div class="flex gap-4 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
+                <div class="relative min-w-[140px]">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i data-lucide="filter" class="h-4 w-4 text-gray-400"></i>
+                    </div>
+                    <select id="filter-product" class="block w-full pl-10 pr-8 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-lg border bg-white">
+                        <option value="Todos">Todos Produtos</option>
+                        <option value="Lions">Lions Car Club</option>
+                        <option value="G30">Programa G30</option>
+                    </select>
                 </div>
-              </div>
 
-              <div>
-                <label className="text-xs font-semibold text-gray-500 uppercase">Datas</label>
-                <div className="flex flex-col gap-1 mt-1 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Início:</span>
-                    <span className="font-medium">{client.inicio}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Vencimento:</span>
-                    <span className="font-medium text-red-600">{client.vencimento}</span>
-                  </div>
+                <div class="relative min-w-[140px]">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i data-lucide="thermometer" class="h-4 w-4 text-gray-400"></i>
+                    </div>
+                    <select id="filter-temp" class="block w-full pl-10 pr-8 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-lg border bg-white">
+                        <option value="Todos">Todas Temps</option>
+                        <option value="Quente">Quente</option>
+                        <option value="Morno">Morno</option>
+                        <option value="Frio">Frio</option>
+                    </select>
                 </div>
-              </div>
             </div>
-          </div>
+        </div>
 
-          <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
-            <h4 className="font-semibold text-slate-700 mb-2 flex items-center gap-2">
-              <TrendingUp size={16} />
-              Status do Funil
-            </h4>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <span className="text-xs text-gray-500 block">Etapa</span>
-                <span className="font-medium text-slate-800">{client.etapa}</span>
-              </div>
-              <div>
-                <span className="text-xs text-gray-500 block">Status</span>
-                <span className="font-medium text-slate-800">{client.status}</span>
-              </div>
-              <div>
-                <span className="text-xs text-gray-500 block">Temperatura</span>
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                  client.temp === 'Quente' ? 'bg-red-100 text-red-800' :
-                  client.temp === 'Morno' ? 'bg-yellow-100 text-yellow-800' :
-                  'bg-blue-100 text-blue-800'
-                }`}>
-                  {client.temp}
+        <!-- Data Table -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Cliente / Loja</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Produto</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Status / Etapa</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Temp.</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Vencimento</th>
+                            <th scope="col" class="relative px-6 py-3"><span class="sr-only">Ações</span></th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body" class="bg-white divide-y divide-gray-200">
+                        <!-- Linhas inseridas via JS -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="bg-gray-50 px-6 py-3 border-t border-gray-200 flex items-center justify-between">
+                <span class="text-sm text-gray-700">
+                    Mostrando <span id="count-display" class="font-medium">0</span> resultados
                 </span>
-              </div>
+                <div class="text-xs text-gray-400">Dados atualizados do sistema</div>
             </div>
-          </div>
+        </div>
+    </main>
 
-          {client.desafio && (
-            <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
-              <h4 className="font-semibold text-orange-800 mb-2 flex items-center gap-2">
-                <AlertCircle size={16} />
-                Maior Desafio
-              </h4>
-              <p className="text-orange-900 text-sm">{client.desafio}</p>
-            </div>
-          )}
+    <!-- Modal Container (Hidden by default) -->
+    <div id="modal-backdrop" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4 transition-opacity duration-300">
+        <div id="modal-content" class="bg-white rounded-lg shadow-xl w-full max-w-2xl overflow-hidden transform transition-all scale-95 opacity-0">
+            <!-- Conteúdo do modal inserido via JS -->
         </div>
-        
-        <div className="bg-gray-50 p-4 flex justify-end">
-          <button 
-            onClick={onClose}
-            className="px-4 py-2 bg-slate-800 text-white rounded hover:bg-slate-700 transition-colors"
-          >
-            Fechar
-          </button>
-        </div>
-      </div>
     </div>
-  );
-};
 
-export default function CRMDashboard() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterProduct, setFilterProduct] = useState('Todos');
-  const [filterTemp, setFilterTemp] = useState('Todos');
-  const [selectedClient, setSelectedClient] = useState(null);
+    <script>
+        // Dados
+        const rawData = [
+            { id: "11784", nome: "MARCOS E LIGIA", loja: "MOURAVEL VEICULOS LTDA", produto: "Lions Car Club", email: "marcosjdemoura@hotmail.com", telefone: "43996713029", inicio: "05/08/2023", vencimento: "09/10/2025", etapa: "Renovação", status: "Follow-up", temp: "Morno", endereco: "RUA SANTA CATARINA, 491 CENTRO, LONDRINA, PR", cnpj: "19473574000105", desafio: "Gestão comercial: organizar o processo de vendas" },
+            { id: "11813", nome: "JUNIOR MACARIO", loja: "Jr Veiculos LTDA", produto: "Lions Car Club", email: "8881789376", telefone: "24/10/2023", inicio: "24/10/2023", vencimento: "20/10/2025", etapa: "Renovação", status: "A renovar", temp: "Morno", endereco: "Rua Professor Julio Holanda 134 Iraja Quixadá CE", cnpj: "35665146000130", desafio: "Gestão comercial e resultados" },
+            { id: "202216343", nome: "Diogo", loja: "Diogo Automóveis Ltda", produto: "Lions Car Club", email: "diogoautomoveismuriae@gmail.com", telefone: "32988878522", inicio: "23/10/2024", vencimento: "23/10/2025", etapa: "Renovação", status: "A renovar", temp: "Frio", endereco: "Avenida Dante Bruno, 165 - Dornelas, Muriaé - MG", cnpj: "45536762000145", desafio: "Gestão comercial e equipe" },
+            { id: "25017901", nome: "Leonardo martini", loja: "martinauto comercio de veiculos ltda", produto: "Lions Car Club", email: "leonardo@martinemotors.com.br", telefone: "11940010830", inicio: "14/11/2024", vencimento: "14/11/2025", etapa: "Simulação Lions Car Club", status: "Enviar para Renovação", temp: "Morno", endereco: "Rua Arthur Germano Fher, 16, Jundiaí - SP", cnpj: "00027164000102", desafio: "Pré-vendas e qualificação" },
+            { id: "15012011779", nome: "ARMANDO", loja: "Londrina Comercio de Carros e Servicos", produto: "Lions Car Club", email: "londrinacarrosvendas@gmail.com", telefone: "43999574707", inicio: "05/08/2023", vencimento: "20/11/2025", etapa: "Renovação", status: "SE Agendada", temp: "Morno", endereco: "RUA MARANHAO, CENTRO, 691 LONDRINA PR", cnpj: "41022918047000171", desafio: "" },
+            { id: "11800", nome: "PAULO VIANNA", loja: "Reis Magos Comercio de Veiculos LTDA", produto: "Lions Car Club", email: "Adm.natal@showautomall.com.br", telefone: "84991322137", inicio: "21/10/2023", vencimento: "24/11/2025", etapa: "Renovação", status: "A renovar", temp: "Morno", endereco: "Rua Lucia Viveiros 535 Loja 25 Neopolis Natal RN", cnpj: "27390708000152", desafio: "Pré-vendas e qualificação" },
+            { id: "14707", nome: "Cláudia Mara Dessanti", loja: "Pallotti Veiculos Freitas & Dessanti", produto: "Lions Car Club", email: "pallottiveiculos@hotmail.com", telefone: "45999254645", inicio: "26/07/2024", vencimento: "10/12/2025", etapa: "Simulação Lions Car Club", status: "Enviar para Renovação", temp: "Quente", endereco: "Avenida Tito Muffato, 655, Cascavel, PR", cnpj: "19002116000198", desafio: "Gestão comercial" },
+            { id: "1530137", nome: "Thomaz Lopes", loja: "Thomaz Comércio, serviço e locação", produto: "Lions Car Club", email: "thomazlopescg@gmail.com", telefone: "83991339090", inicio: "10/12/2024", vencimento: "10/12/2025", etapa: "[CS] Lions car club", status: "Processo de cancelamento", temp: "Quente", endereco: "Rua Diógenes Chianca, 1401, João Pessoa - PB", cnpj: "33872846000170", desafio: "Gestão de pessoas" },
+            { id: "904011229", nome: "Tiago Zorzi", loja: "America Carros", produto: "Lions Car Club", email: "vendas@americacarros.com.br", telefone: "4999804179", inicio: "15/03/2024", vencimento: "11/12/2025", etapa: "Simulação Lions Car Club", status: "Comercial", temp: "Morno", endereco: "AVENIDA GETULIO VARGAS, 1171, ABELARDO LUZ - SC", cnpj: "46769308000105", desafio: "Gestão comercial" },
+            { id: "11643", nome: "Jean Lameque", loja: "JCAR", produto: "Lions Car Club", email: "jcarseminosvosadm@gmail.com", telefone: "11932122124", inicio: "15/04/2024", vencimento: "15/12/2025", etapa: "Simulação Lions Car Club", status: "Comercial", temp: "Morno", endereco: "Avenida Cupecê, 3545, São Paulo/SP", cnpj: "2786628000168", desafio: "Pré-vendas" },
+            { id: "1116589", nome: "Loren Porto", loja: "Pardim Porto Comércio de Veículos", produto: "Programa G30", email: "lorenpardim@outlook.com", telefone: "11999929950", inicio: "07/10/2024", vencimento: "07/10/2025", etapa: "Renovação", status: "Negociações Iniciadas", temp: "Frio", endereco: "Avenida Governador Adhemar de Barros, 821, Mogi das Cruzes", cnpj: "26333402000100", desafio: "Gestão comercial" },
+            { id: "252016626", nome: "Michele Porto", loja: "Auto Padrão Veículos Ltda", produto: "Programa G30", email: "micheleportoautopadrao@gmail.com", telefone: "62984521188", inicio: "10/10/2024", vencimento: "10/10/2025", etapa: "Renovação", status: "Negociações Iniciadas", temp: "Frio", endereco: "Av. República do Líbano, 137, Goiânia - GO", cnpj: "14580907000181", desafio: "Estratégias de prospecção ativa" },
+            { id: "251017159", nome: "Hugo", loja: "HR Concept car ltda", produto: "Programa G30", email: "hrconceptcar@gmail.com", telefone: "31995035229", inicio: "18/10/2024", vencimento: "18/10/2025", etapa: "Renovação", status: "SE Agendada", temp: "Quente", endereco: "Avenida Bandeirantes, 590B, Betim - MG", cnpj: "53190030000174", desafio: "Nunca trabalhou com o digital" },
+            { id: "15802", nome: "Ronaldo Garcia", loja: "Ashow veículos Ltda", produto: "Programa G30", email: "drronaldogarcia@gmail.com", telefone: "21984819015", inicio: "31/10/2024", vencimento: "31/10/2025", etapa: "[CS] Programa G30", status: "Processo de cancelamento", temp: "Quente", endereco: "Rua De Adrianópolis, 1812, Nova Iguaçu - RJ", cnpj: "47786262000197", desafio: "Estratégias de prospecção ativa" },
+            { id: "101039826", nome: "Kiko", loja: "Zero Kilometro Automoveis LTDA", produto: "Programa G30", email: "gerencia@meuzerokilometro.com.br", telefone: "31983004043", inicio: "04/11/2025", vencimento: "04/11/2025", etapa: "Simulação G30 Pro", status: "Marketing", temp: "Quente", endereco: "Avenida Barão Homem de Melo, 2951, Belo Horizonte - MG", cnpj: "25299122000151", desafio: "Negociação e fechamento" },
+            { id: "81014905", nome: "Rudinei", loja: "Zorzetto veículos Ltda", produto: "Programa G30", email: "zorzettoveiculos@gmail.com", telefone: "54996094710", inicio: "13/11/2024", vencimento: "13/11/2025", etapa: "Renovação", status: "A renovar", temp: "Quente", endereco: "Rua Procópio de Lima, 435, Pato Branco - PR", cnpj: "36429853000190", desafio: "Estratégias de prospecção ativa" },
+            { id: "3516846", nome: "Lidianne Leite", loja: "MCAR VEICULOS", produto: "Programa G30", email: "matos.lidi@hotmail.com", telefone: "91982171219", inicio: "16/10/2024", vencimento: "16/11/2025", etapa: "Simulação G30 Pro", status: "Enviar para Renovação", temp: "Quente", endereco: "Av. Sen. Lemos, 156, Belém - PA", cnpj: "24631359000125", desafio: "Gestão comercial" },
+            { id: "452218588", nome: "Elison Ribeiro", loja: "BERTO MULTIMARCAS LTDA", produto: "Programa G30", email: "elison.dsribeiro@gmail.com", telefone: "45998197550", inicio: "11/12/2024", vencimento: "11/12/2025", etapa: "Simulação G30 Pro", status: "Enviar para Renovação", temp: "Quente", endereco: "AVENIDA JULES RIMET, 1313, FOZ DO IGUAÇU, PR", cnpj: "29835334295000117", desafio: "Pré-vendas" },
+            { id: "10018518", nome: "Jose", loja: "J Augusto Veículos", produto: "Programa G30", email: "grajeveiculos2023@gmail.com", telefone: "8899717676", inicio: "13/12/2024", vencimento: "13/12/2025", etapa: "Simulação G30 Pro", status: "Enviar para Renovação", temp: "Quente", endereco: "Avenida Padre Cícero 2215, Juazeiro Do Norte CE", cnpj: "49423744000108", desafio: "Negociação e fechamento" },
+            { id: "502018295", nome: "Carlos", loja: "Fm Empreendimentos", produto: "Programa G30", email: "fmp.atendimento@hotmail.com", telefone: "31996196360", inicio: "19/12/2024", vencimento: "19/12/2025", etapa: "Renovação", status: "A renovar", temp: "Quente", endereco: "Rua Capitão Leonidio Soares, 610, Belo Horizonte - MG", cnpj: "22010260000180", desafio: "Contratação de time" },
+        ];
 
-  const filteredData = useMemo(() => {
-    return rawData.filter(item => {
-      const matchesSearch = 
-        item.nome.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        item.loja.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesProduct = filterProduct === 'Todos' || item.produto.includes(filterProduct);
-      const matchesTemp = filterTemp === 'Todos' || item.temp === filterTemp;
-      return matchesSearch && matchesProduct && matchesTemp;
-    });
-  }, [searchTerm, filterProduct, filterTemp]);
+        // Estado inicial
+        let state = {
+            searchTerm: '',
+            filterProduct: 'Todos',
+            filterTemp: 'Todos'
+        };
 
-  const stats = {
-    total: filteredData.length,
-    quente: filteredData.filter(i => i.temp === 'Quente').length,
-    morno: filteredData.filter(i => i.temp === 'Morno').length,
-    frio: filteredData.filter(i => i.temp === 'Frio').length,
-  };
+        // Elementos DOM
+        const tableBody = document.getElementById('table-body');
+        const statsContainer = document.getElementById('stats-container');
+        const countDisplay = document.getElementById('count-display');
+        const searchInput = document.getElementById('search-input');
+        const filterProductSelect = document.getElementById('filter-product');
+        const filterTempSelect = document.getElementById('filter-temp');
+        const modalBackdrop = document.getElementById('modal-backdrop');
+        const modalContent = document.getElementById('modal-content');
+        const currentDateEl = document.getElementById('current-date');
 
-  return (
-    <div className="min-h-screen bg-slate-100 font-sans text-slate-900">
-      {/* Header */}
-      <header className="bg-slate-900 text-white shadow-lg sticky top-0 z-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <img 
-              src="https://raw.githubusercontent.com/danfernandes12/g30-summit-dashboard/91b8ada84154b053fb9d81ef1bf9d5910773bcac/g30ia" 
-              alt="G30 Logo" 
-              className="h-10 w-auto object-contain bg-white/10 rounded-md p-1"
-            />
-            <h1 className="text-xl font-bold tracking-tight">CRM Gestão de Clientes</h1>
-          </div>
-          <div className="text-sm text-slate-400 hidden md:block">
-            {new Date().toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-          </div>
-        </div>
-      </header>
+        // Formatação de Data
+        currentDateEl.textContent = new Date().toLocaleDateString('pt-BR', { 
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+        });
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Clientes</p>
-            <p className="text-2xl font-bold text-slate-800 mt-1">{stats.total}</p>
-          </div>
-          <div className="bg-white p-4 rounded-xl shadow-sm border-l-4 border-l-red-500 border-y border-r border-slate-200">
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Quentes</p>
-                <p className="text-2xl font-bold text-red-600 mt-1">{stats.quente}</p>
-              </div>
-              <Thermometer className="text-red-200" size={24} />
-            </div>
-          </div>
-          <div className="bg-white p-4 rounded-xl shadow-sm border-l-4 border-l-yellow-500 border-y border-r border-slate-200">
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Mornos</p>
-                <p className="text-2xl font-bold text-yellow-600 mt-1">{stats.morno}</p>
-              </div>
-              <Thermometer className="text-yellow-200" size={24} />
-            </div>
-          </div>
-          <div className="bg-white p-4 rounded-xl shadow-sm border-l-4 border-l-blue-500 border-y border-r border-slate-200">
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Frios</p>
-                <p className="text-2xl font-bold text-blue-600 mt-1">{stats.frio}</p>
-              </div>
-              <Thermometer className="text-blue-200" size={24} />
-            </div>
-          </div>
-        </div>
+        // Ícones
+        function initIcons() {
+            lucide.createIcons();
+        }
 
-        {/* Filters & Actions */}
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 mb-6 flex flex-col md:flex-row gap-4 justify-between items-center">
-          <div className="relative w-full md:w-96">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-gray-400" />
-            </div>
-            <input
-              type="text"
-              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition-all"
-              placeholder="Buscar por cliente ou loja..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
+        // Renderização Stats
+        function renderStats(data) {
+            const stats = {
+                total: data.length,
+                quente: data.filter(i => i.temp === 'Quente').length,
+                morno: data.filter(i => i.temp === 'Morno').length,
+                frio: data.filter(i => i.temp === 'Frio').length,
+            };
 
-          <div className="flex gap-4 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
-            <div className="relative min-w-[140px]">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Filter className="h-4 w-4 text-gray-400" />
-              </div>
-              <select
-                value={filterProduct}
-                onChange={(e) => setFilterProduct(e.target.value)}
-                className="block w-full pl-10 pr-8 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-lg border bg-white"
-              >
-                <option value="Todos">Todos Produtos</option>
-                <option value="Lions">Lions Car Club</option>
-                <option value="G30">Programa G30</option>
-              </select>
-            </div>
-
-            <div className="relative min-w-[140px]">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Thermometer className="h-4 w-4 text-gray-400" />
-              </div>
-              <select
-                value={filterTemp}
-                onChange={(e) => setFilterTemp(e.target.value)}
-                className="block w-full pl-10 pr-8 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-lg border bg-white"
-              >
-                <option value="Todos">Todas Temps</option>
-                <option value="Quente">Quente</option>
-                <option value="Morno">Morno</option>
-                <option value="Frio">Frio</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        {/* Data Table */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Cliente / Loja</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Produto</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Status / Etapa</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Temp.</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Vencimento</th>
-                  <th scope="col" className="relative px-6 py-3"><span className="sr-only">Ações</span></th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredData.length > 0 ? (
-                  filteredData.map((client) => (
-                    <tr key={client.id} className="hover:bg-slate-50 transition-colors cursor-pointer group" onClick={() => setSelectedClient(client)}>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <div className="flex-shrink-0 h-10 w-10 bg-slate-200 rounded-full flex items-center justify-center text-slate-600 font-bold">
-                            {client.loja.charAt(0)}
-                          </div>
-                          <div className="ml-4">
-                            <div className="text-sm font-bold text-slate-900 truncate max-w-[200px]">{client.loja}</div>
-                            <div className="text-sm text-gray-500">{client.nome}</div>
-                          </div>
+            statsContainer.innerHTML = `
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Clientes</p>
+                    <p class="text-2xl font-bold text-slate-800 mt-1">${stats.total}</p>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-l-red-500 border-y border-r border-slate-200">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Quentes</p>
+                            <p class="text-2xl font-bold text-red-600 mt-1">${stats.quente}</p>
                         </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          client.produto.includes('Lions') ? 'bg-indigo-100 text-indigo-800' : 'bg-emerald-100 text-emerald-800'
-                        }`}>
-                          {client.produto}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900 font-medium">{client.etapa}</div>
-                        <div className="text-xs text-gray-500">{client.status}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-xs font-medium ${
-                          client.temp === 'Quente' ? 'bg-red-50 text-red-700 border border-red-200' :
-                          client.temp === 'Morno' ? 'bg-yellow-50 text-yellow-700 border border-yellow-200' :
-                          'bg-blue-50 text-blue-700 border border-blue-200'
-                        }`}>
-                          {client.temp === 'Quente' && <TrendingUp size={12} />}
-                          {client.temp}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 flex items-center gap-2">
-                        <Calendar size={14} />
-                        {client.vencimento}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); setSelectedClient(client); }}
-                          className="text-indigo-600 hover:text-indigo-900 group-hover:bg-indigo-50 p-2 rounded-full transition-all"
-                        >
-                          <ChevronRight size={20} />
-                        </button>
-                      </td>
+                        <i data-lucide="thermometer" class="text-red-200 h-6 w-6"></i>
+                    </div>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-l-yellow-500 border-y border-r border-slate-200">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Mornos</p>
+                            <p class="text-2xl font-bold text-yellow-600 mt-1">${stats.morno}</p>
+                        </div>
+                        <i data-lucide="thermometer" class="text-yellow-200 h-6 w-6"></i>
+                    </div>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-l-blue-500 border-y border-r border-slate-200">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Frios</p>
+                            <p class="text-2xl font-bold text-blue-600 mt-1">${stats.frio}</p>
+                        </div>
+                        <i data-lucide="thermometer" class="text-blue-200 h-6 w-6"></i>
+                    </div>
+                </div>
+            `;
+            initIcons();
+        }
+
+        // Renderização Tabela
+        function renderTable(data) {
+            tableBody.innerHTML = '';
+            
+            if (data.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+                            <div class="flex flex-col items-center justify-center">
+                                <i data-lucide="search" class="text-gray-300 h-12 w-12 mb-4"></i>
+                                <p class="text-lg font-medium">Nenhum cliente encontrado</p>
+                                <p class="text-sm">Tente ajustar seus filtros de busca.</p>
+                            </div>
+                        </td>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
-                      <div className="flex flex-col items-center justify-center">
-                        <Search size={48} className="text-gray-300 mb-4" />
-                        <p className="text-lg font-medium">Nenhum cliente encontrado</p>
-                        <p className="text-sm">Tente ajustar seus filtros de busca.</p>
-                      </div>
+                `;
+                initIcons();
+                return;
+            }
+
+            data.forEach(client => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50 transition-colors cursor-pointer group border-b border-gray-100 last:border-b-0';
+                tr.onclick = () => openModal(client);
+
+                const isLions = client.produto.includes('Lions');
+                const badgeClass = isLions ? 'bg-indigo-100 text-indigo-800' : 'bg-emerald-100 text-emerald-800';
+                
+                let tempClass = 'bg-blue-50 text-blue-700 border border-blue-200';
+                if (client.temp === 'Quente') tempClass = 'bg-red-50 text-red-700 border border-red-200';
+                else if (client.temp === 'Morno') tempClass = 'bg-yellow-50 text-yellow-700 border border-yellow-200';
+
+                tr.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 h-10 w-10 bg-slate-200 rounded-full flex items-center justify-center text-slate-600 font-bold">
+                                ${client.loja.charAt(0)}
+                            </div>
+                            <div class="ml-4">
+                                <div class="text-sm font-bold text-slate-900 truncate max-w-[200px]">${client.loja}</div>
+                                <div class="text-sm text-gray-500">${client.nome}</div>
+                            </div>
+                        </div>
                     </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-          <div className="bg-gray-50 px-6 py-3 border-t border-gray-200 flex items-center justify-between">
-             <span className="text-sm text-gray-700">
-               Mostrando <span className="font-medium">{filteredData.length}</span> resultados
-             </span>
-             <div className="text-xs text-gray-400">Dados atualizados do sistema</div>
-          </div>
-        </div>
-      </main>
-      
-      {/* Modal de Detalhes */}
-      <Modal 
-        isOpen={!!selectedClient} 
-        onClose={() => setSelectedClient(null)} 
-        client={selectedClient} 
-      />
-    </div>
-  );
-}
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${badgeClass}">
+                            ${client.produto}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900 font-medium">${client.etapa}</div>
+                        <div class="text-xs text-gray-500">${client.status}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-xs font-medium ${tempClass}">
+                            ${client.temp === 'Quente' ? '<i data-lucide="trending-up" class="h-3 w-3"></i>' : ''}
+                            ${client.temp}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 flex items-center gap-2 pt-6">
+                        <i data-lucide="calendar" class="h-3.5 w-3.5"></i>
+                        ${client.vencimento}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button class="text-indigo-600 hover:text-indigo-900 group-hover:bg-indigo-50 p-2 rounded-full transition-all">
+                            <i data-lucide="chevron-right" class="h-5 w-5"></i>
+                        </button>
+                    </td>
+                `;
+                tableBody.appendChild(tr);
+            });
+            initIcons();
+        }
+
+        // Filtro Lógica
+        function filterData() {
+            const filtered = rawData.filter(item => {
+                const matchesSearch = 
+                    item.nome.toLowerCase().includes(state.searchTerm.toLowerCase()) || 
+                    item.loja.toLowerCase().includes(state.searchTerm.toLowerCase());
+                const matchesProduct = state.filterProduct === 'Todos' || item.produto.includes(state.filterProduct);
+                const matchesTemp = state.filterTemp === 'Todos' || item.temp === state.filterTemp;
+                return matchesSearch && matchesProduct && matchesTemp;
+            });
+
+            renderStats(filtered);
+            renderTable(filtered);
+            countDisplay.textContent = filtered.length;
+        }
+
+        // Event Listeners
+        searchInput.addEventListener('input', (e) => {
+            state.searchTerm = e.target.value;
+            filterData();
+        });
+
+        filterProductSelect.addEventListener('change', (e) => {
+            state.filterProduct = e.target.value;
+            filterData();
+        });
+
+        filterTempSelect.addEventListener('change', (e) => {
+            state.filterTemp = e.target.value;
+            filterData();
+        });
+
+        // Modal Logic
+        function openModal(client) {
+            const isLions = client.produto.includes('Lions');
+            const badgeClass = isLions ? 'bg-indigo-100 text-indigo-700' : 'bg-emerald-100 text-emerald-700';
+            
+            let tempClass = 'bg-blue-100 text-blue-800';
+            if (client.temp === 'Quente') tempClass = 'bg-red-100 text-red-800';
+            else if (client.temp === 'Morno') tempClass = 'bg-yellow-100 text-yellow-800';
+
+            modalContent.innerHTML = `
+                <div class="bg-slate-800 p-4 flex justify-between items-center">
+                    <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                        <i data-lucide="briefcase" class="h-5 w-5"></i>
+                        Detalhes do Cliente
+                    </h2>
+                    <button onclick="closeModal()" class="text-gray-300 hover:text-white transition-colors">
+                        <i data-lucide="x" class="h-6 w-6"></i>
+                    </button>
+                </div>
+                
+                <div class="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
+                    <div class="flex flex-col md:flex-row gap-4 justify-between border-b pb-4">
+                        <div>
+                            <h3 class="text-2xl font-bold text-slate-800">${client.loja}</h3>
+                            <p class="text-gray-600 font-medium">${client.nome}</p>
+                        </div>
+                        <div class="px-4 py-2 rounded-full text-sm font-bold self-start ${badgeClass}">
+                            ${client.produto}
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="text-xs font-semibold text-gray-500 uppercase">Contato</label>
+                                <div class="flex items-center gap-2 mt-1 text-gray-700">
+                                    <i data-lucide="mail" class="h-4 w-4"></i>
+                                    <span>${client.email || 'Não informado'}</span>
+                                </div>
+                                <div class="flex items-center gap-2 mt-1 text-gray-700">
+                                    <i data-lucide="phone" class="h-4 w-4"></i>
+                                    <span>${client.telefone || 'Não informado'}</span>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="text-xs font-semibold text-gray-500 uppercase">Localização</label>
+                                <div class="flex items-start gap-2 mt-1 text-gray-700">
+                                    <i data-lucide="map-pin" class="h-4 w-4 mt-1 flex-shrink-0"></i>
+                                    <span>${client.endereco || 'Endereço não cadastrado'}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div>
+                                <label class="text-xs font-semibold text-gray-500 uppercase">Dados Comerciais</label>
+                                <div class="grid grid-cols-2 gap-2 mt-1">
+                                    <div class="bg-gray-50 p-2 rounded">
+                                        <span class="text-xs text-gray-500 block">CNPJ</span>
+                                        <span class="font-mono text-sm">${client.cnpj || '---'}</span>
+                                    </div>
+                                    <div class="bg-gray-50 p-2 rounded">
+                                        <span class="text-xs text-gray-500 block">ID Interno</span>
+                                        <span class="font-mono text-sm">${client.id}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="text-xs font-semibold text-gray-500 uppercase">Datas</label>
+                                <div class="flex flex-col gap-1 mt-1 text-sm">
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-500">Início:</span>
+                                        <span class="font-medium">${client.inicio}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-500">Vencimento:</span>
+                                        <span class="font-medium text-red-600">${client.vencimento}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                        <h4 class="font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                            <i data-lucide="trending-up" class="h-4 w-4"></i>
+                            Status do Funil
+                        </h4>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <span class="text-xs text-gray-500 block">Etapa</span>
+                                <span class="font-medium text-slate-800">${client.etapa}</span>
+                            </div>
+                            <div>
+                                <span class="text-xs text-gray-500 block">Status</span>
+                                <span class="font-medium text-slate-800">${client.status}</span>
+                            </div>
+                            <div>
+                                <span class="text-xs text-gray-500 block">Temperatura</span>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${tempClass}">
+                                    ${client.temp}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    ${client.desafio ? `
+                        <div class="bg-orange-50 p-4 rounded-lg border border-orange-200">
+                            <h4 class="font-semibold text-orange-800 mb-2 flex items-center gap-2">
+                                <i data-lucide="alert-circle" class="h-4 w-4"></i>
+                                Maior Desafio
+                            </h4>
+                            <p class="text-orange-900 text-sm">${client.desafio}</p>
+                        </div>
+                    ` : ''}
+                </div>
+                
+                <div class="bg-gray-50 p-4 flex justify-end">
+                    <button 
+                        onclick="closeModal()"
+                        class="px-4 py-2 bg-slate-800 text-white rounded hover:bg-slate-700 transition-colors"
+                    >
+                        Fechar
+                    </button>
+                </div>
+            `;
+            
+            initIcons(); // Re-iniciar ícones dentro do modal
+            modalBackdrop.classList.remove('hidden');
+            modalBackdrop.classList.add('flex');
+            // Animação de entrada
+            setTimeout(() => {
+                modalContent.classList.remove('scale-95', 'opacity-0');
+                modalContent.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+
+        window.closeModal = function() {
+            modalContent.classList.remove('scale-100', 'opacity-100');
+            modalContent.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                modalBackdrop.classList.add('hidden');
+                modalBackdrop.classList.remove('flex');
+            }, 200);
+        }
+        
+        // Fechar modal ao clicar fora
+        modalBackdrop.addEventListener('click', (e) => {
+            if (e.target === modalBackdrop) {
+                closeModal();
+            }
+        });
+
+        // Inicialização
+        filterData();
+        initIcons();
+
+    </script>
+</body>
+</html>
